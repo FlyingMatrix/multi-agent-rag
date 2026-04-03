@@ -25,3 +25,22 @@ def split_documents(documents: List[Document], chunk_size: int=CHUNK_SIZE, chunk
 
     return nodes
 
+
+"""
+    👉TODO: Tables should NOT be split like normal text
+
+    1. Detect table-like content
+    2. Keep tables as single chunks
+    3. Only split normal text
+"""
+
+def is_table(text: str) -> bool:
+    """
+        Detect if text looks like a table
+    """
+    lines = text.split("\n")
+
+    # many lines with separators -> likely a table
+    pipe_lines = [line for line in lines if "|" in line]
+    
+    return len(pipe_lines) >= 2

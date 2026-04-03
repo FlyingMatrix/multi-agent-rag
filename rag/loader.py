@@ -5,15 +5,20 @@ from llama_index.core.schema import Document
 import pdfplumber
 
 def extract_pdf_with_tables(file_path: Path) -> List[Document]:
+    """
+        Extract both text and tables from a PDF and store them in structured documents
+    """
     docs = []
 
     with pdfplumber.open(file_path) as pdf:
-        for page_num, page in enumerate(pdf.pages):
+
+        # iterates over all pages, page_num: page index (starting at 0), page: the actual page object
+        for page_num, page in enumerate(pdf.pages): 
             text = page.extract_text() or ""
 
+            # extracts tables from the page, return a list of tables, each table is a list of rows, each row is a list of cells
             tables = page.extract_tables()
             table_texts = []
-
             for table in tables:
                 rows = [" | ".join(cell or "" for cell in row) for row in table]
                 table_texts.append("\n".join(rows))
@@ -29,7 +34,8 @@ def extract_pdf_with_tables(file_path: Path) -> List[Document]:
                     }
                 )
             )
-
+    
+    # return the full list of documents, each document represents one page of the PDF
     return docs
 
 def load_documents(path: str) -> List[Document]:
@@ -68,3 +74,4 @@ def load_documents(path: str) -> List[Document]:
         print("Warning: No documents found.")
 
     return documents
+
