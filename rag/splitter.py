@@ -59,6 +59,13 @@ def is_table(text: str, min_rows: int = 2, min_cols: int = 2) -> bool:
     return False
 
 
+def clean_nodes(nodes):
+    return [
+        node for node in nodes
+        if node.get_content() and node.get_content().strip()
+    ]
+
+
 def split_documents(documents: List[Document], chunk_size: int=CHUNK_SIZE, chunk_overlap: int=CHUNK_OVERLAP) -> List[Node]:
     """
         Split documents into chunks (nodes) while preserving tables
@@ -134,5 +141,5 @@ def split_documents(documents: List[Document], chunk_size: int=CHUNK_SIZE, chunk
                 )
                 nodes.extend(sub_nodes)
 
-    return nodes
+    return clean_nodes(nodes)
 

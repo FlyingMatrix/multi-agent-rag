@@ -55,7 +55,7 @@ def load_documents(path: str) -> List[Document]:
         suffix = file_path.suffix.lower()
 
         if suffix == ".pdf":
-            # read the PDF and return a list of Document objects (often one per page or chunk)
+            # read the PDF and return a list of Document objects (usually one document per page or chunk)
             docs = extract_pdf_with_tables(file_path)
             # add all returned Documents into the main documents list
             documents.extend(docs)
