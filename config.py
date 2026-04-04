@@ -15,7 +15,7 @@ EMBED_MODEL = HuggingFaceEmbedding(
 )
 
 # ---- Vector DB ----
-CHROMA_PATH = os.getenv("CHROMA_PATH", "./db")
+CHROMA_PATH = os.getenv("CHROMA_PATH", "./vector_database")
 
 # ---- Chunking ----
 CHUNK_SIZE = 512        # Maximum size of each chunk (number of tokens per knowledge segment)
