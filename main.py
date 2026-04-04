@@ -4,6 +4,7 @@ from rich import print                      # an enhanced print function for sty
 from ingest import ingest_command
 from query import query_command
 
+
 app = typer.Typer(help="RAG Agent CLI")     # "RAG Agent CLI" is the help description shown when running "python main.py --help"
 
 # register commands

@@ -4,6 +4,7 @@ from pathlib import Path
 from llama_index.core.schema import Document
 import pdfplumber
 
+
 def extract_pdf_with_tables(file_path: Path) -> List[Document]:
     """
         Extract both text and tables from a PDF and store them in structured documents
@@ -37,6 +38,7 @@ def extract_pdf_with_tables(file_path: Path) -> List[Document]:
     
     # return the full list of documents, each document represents one page of the PDF
     return docs
+
 
 def load_documents(path: str) -> List[Document]:
     """

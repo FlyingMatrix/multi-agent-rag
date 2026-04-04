@@ -6,9 +6,25 @@ from llama_index.core.schema import Document, Node
 from config import CHUNK_SIZE, CHUNK_OVERLAP
 
 
+def is_table(text: str) -> bool:
+    """
+        Detect if text looks like a table
+    """
+    lines = text.split("\n")
+
+    # many lines with separators -> likely a table
+    pipe_lines = [line for line in lines if "|" in line]
+    
+    return len(pipe_lines) >= 2
+
+
 def split_documents(documents: List[Document], chunk_size: int=CHUNK_SIZE, chunk_overlap: int=CHUNK_OVERLAP) -> List[Node]:
     """
-        Split documents into chunks (nodes)
+        Split documents into chunks (nodes) while preserving tables
+        Strategies: 
+            1. Detect table-like content
+            2. Keep tables as single chunks
+            3. Only split normal text
     """
     if not documents:
         return []
@@ -21,26 +37,33 @@ def split_documents(documents: List[Document], chunk_size: int=CHUNK_SIZE, chunk
         chunk_overlap=chunk_overlap,
     )
 
-    nodes = splitter.get_nodes_from_documents(documents)
+    nodes = []
+
+    for doc in documents:
+        text = doc.text
+
+        # split into sections (basic heuristic)
+        sections = text.split("\n\n")
+
+        for section in sections:
+            section = section.strip()
+            if not section:
+                continue
+
+            if is_table(section):
+                # keep table intact, preserved as ONE chunk
+                nodes.append(
+                    Node(
+                        text=section,
+                        metadata=doc.metadata
+                    )
+                )
+            else:
+                # normal text -> split
+                sub_nodes = splitter.get_nodes_from_documents(
+                    [Document(text=section, metadata=doc.metadata)]
+                )
+                nodes.extend(sub_nodes)
 
     return nodes
 
-
-"""
-    👉TODO: Tables should NOT be split like normal text
-
-    1. Detect table-like content
-    2. Keep tables as single chunks
-    3. Only split normal text
-"""
-
-def is_table(text: str) -> bool:
-    """
-        Detect if text looks like a table
-    """
-    lines = text.split("\n")
-
-    # many lines with separators -> likely a table
-    pipe_lines = [line for line in lines if "|" in line]
-    
-    return len(pipe_lines) >= 2
