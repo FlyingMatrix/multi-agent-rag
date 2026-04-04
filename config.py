@@ -7,7 +7,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
 
 # ---- Embeddings ----
 EMBED_MODEL = HuggingFaceEmbedding(
-    model_name=os.getenv("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+    model_name = os.getenv("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 )
 """
     "all-MiniLM-L6-v2" is a SentenceTransformer model
