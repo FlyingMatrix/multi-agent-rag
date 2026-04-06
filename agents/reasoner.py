@@ -1,10 +1,18 @@
 from agents.retriever import Retriever
 from llm import OllamaLLM
+import textwrap             # for removing any common leading whitespace from every line in text
+
+MAX_CONTEXT_CHARS = 4000    # limit context size to avoid diluting important info
+
 
 class Reasoner:
     def __init__(self):
         self.retriever = Retriever()
         self.llm = OllamaLLM(model="llama3")
+
+    @staticmethod
+    def fallback():
+        yield "I don't know."
 
     def build_prompt(self, query: str, contexts):
         """
@@ -15,33 +23,75 @@ class Reasoner:
                 score=<float>
             )
         """
-        context_text = "\n\n".join(
-            [f"[{i}] {nws.node.get_content()}" for i, nws in enumerate(contexts)]
-        )
+        context_text = ""
 
-        prompt = f"""
-            You are a helpful assistant.
-            Use the context below to answer the question.
+        if not contexts:
+            return self.fallback
 
-            Context:
-            {context_text}
+        for i, nws in enumerate(contexts):
+            chunk = f"[{i} | type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f}]\n{nws.node.get_content()}"
+            if len(context_text) + len(chunk) > MAX_CONTEXT_CHARS:
+                break
+            context_text += chunk + "\n\n"
 
-            Question:
-            {query}
+        # build prompt with hallucination control
+        prompt = textwrap.dedent(f"""\
+        You are a helpful assistant for question answering.
 
-            Answer:
-        """
+        Use ONLY the provided context to answer the question.
+
+        Context types:
+        - text: normal paragraphs
+        - table: structured data (rows and columns)
+
+        When using tables:
+        - Pay attention to rows and columns
+        - Extract exact values
+
+        Rules:
+        - If the answer is not in the context, say "I don't know."
+        - Do NOT make up information.
+        - Prefer concise and accurate answers.
+
+        Context:
+        {context_text}
+
+        Question:
+        {query}
+
+        Answer:
+        """)
+
         return prompt
 
     def run(self, query: str):
-        # get the top_k most similar nodes wrapped with scores
-        contexts = self.retriever.retrieve(query)
+        """
+            pipeline: rewrite_query -> retrieve -> build_prompt -> generate
+        """
+        # rewrite query to improve retrieval quality 
+        original_query = query
+        rewritten_query = self.llm.rewrite_query(query)
 
-        # use query and contexts to create prompt
-        prompt = self.build_prompt(query, contexts)
-        
+        # get the top_k most similar nodes wrapped with scores, retrieval optimized
+        contexts = self.retriever.retrieve(rewritten_query)
+
+        # use original_query and contexts to create prompt, answer grounded in original question
+        prompt = self.build_prompt(original_query, contexts)
+
         # pass the prompt to llm to generate results
         results = self.llm.stream_generate(prompt)
 
         return results
     
+
+"""
+    TODO: 
+        - LLMs work on tokens, not characters -> use tokenizer (e.g., tiktoken) as a better approach
+        - add citation instruction -> "Cite sources using [0], [1], etc."
+        - Prioritize table chunks differently -> If query suggests numeric lookup: Move tables first
+        - Context compression -> before building prompt:
+            Summarize long chunks
+            Keep only relevant sentences
+        - Add answer format control
+"""
+
