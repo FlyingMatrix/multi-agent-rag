@@ -19,7 +19,7 @@ class Retriever:
             - retrieve() -> returns raw nodes
             - query() -> may involve LLM response generation
     """
-    def __init__(self, top_k: int = 5):
+    def __init__(self, top_k: int=5):
         self.index = load_index()                           # reconstructs a LlamaIndex VectorStoreIndex
         self.top_k = top_k                                  # controls how many results to return
 

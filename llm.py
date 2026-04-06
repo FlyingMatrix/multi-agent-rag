@@ -1,7 +1,7 @@
 from ollama import chat
 
 class OllamaLLM:
-    def __init__(self, model: str = "llama3"):
+    def __init__(self, model: str="llama3"):
         self.model = model
 
     def stream_generate(self, prompt: str):
