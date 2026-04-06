@@ -36,8 +36,12 @@ class Reasoner:
     def run(self, query: str):
         # get the top_k most similar nodes wrapped with scores
         contexts = self.retriever.retrieve(query)
+
         # use query and contexts to create prompt
         prompt = self.build_prompt(query, contexts)
+        
         # pass the prompt to llm to generate results
-        return self.llm.stream_generate(prompt)
+        results = self.llm.stream_generate(prompt)
+
+        return results
     
