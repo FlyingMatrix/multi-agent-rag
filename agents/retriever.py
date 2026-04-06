@@ -34,5 +34,16 @@ class Retriever:
             Takes a user query (string), passes it to the query engine and returns retrieved results
         """
         response = self.query_engine.retrieve(query)
-        return response
+        return response 
+        """
+            response is the top_k most similar nodes wrapped with scores, which in a format of NodeWithScore
+            In other words, response is a list of NodeWithScore objects: [NodeWithScore, NodeWithScore, NodeWithScore, ...]
+
+            each item in the list (NodeWithScore) looks like below:
+            
+                NodeWithScore(
+                    node=<Node>,
+                    score=<float>
+                )
+        """
     
