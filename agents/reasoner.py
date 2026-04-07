@@ -1,18 +1,23 @@
 from agents.retriever import Retriever
 from llm import OllamaLLM
 import textwrap             # for removing any common leading whitespace from every line in text
+import tiktoken             # local tokenizer
 
-MAX_CONTEXT_CHARS = 4000    # limit context size to avoid diluting important info
+MAX_CONTEXT_TOKENS = 1500   # safer than pushing limits
 
 
 class Reasoner:
     def __init__(self):
         self.retriever = Retriever()
         self.llm = OllamaLLM(model="llama3")
+        self.tokenizer = tiktoken.encoding_for_model(model_name="gpt-3.5-turbo")
 
     @staticmethod
     def fallback():
         yield "I don't know."
+
+    def count_tokens(self, text: str) -> int:
+        return len(self.tokenizer.encode(text))
 
     def build_prompt(self, query: str, contexts):
         """
@@ -24,15 +29,20 @@ class Reasoner:
             )
         """
         context_text = ""
+        current_tokens = 0
 
         if not contexts:
             return self.fallback
 
         for i, nws in enumerate(contexts):
             chunk = f"[{i} | type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f}]\n{nws.node.get_content()}"
-            if len(context_text) + len(chunk) > MAX_CONTEXT_CHARS:
+
+            chunk_tokens = self.count_tokens(chunk)
+            if current_tokens + chunk_tokens > MAX_CONTEXT_TOKENS:
                 break
+
             context_text += chunk + "\n\n"
+            current_tokens += chunk_tokens
 
         # build prompt with hallucination control
         prompt = textwrap.dedent(f"""\
@@ -86,7 +96,7 @@ class Reasoner:
 
 """
     TODO: 
-        - LLMs work on tokens, not characters -> use tokenizer (e.g., tiktoken) as a better approach
+        - LLMs work on tokens, not characters -> number_of_tokens(context_text) -> use tokenizer (e.g., tiktoken) as a better approach
         - add citation instruction -> "Cite sources using [0], [1], etc."
         - Prioritize table chunks differently -> If query suggests numeric lookup: Move tables first
         - Context compression -> before building prompt:
