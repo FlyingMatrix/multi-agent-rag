@@ -3,7 +3,17 @@ from llm import OllamaLLM
 import textwrap             # for removing any common leading whitespace from every line in text
 import tiktoken             # local tokenizer
 
-MAX_CONTEXT_TOKENS = 1500   # safer than pushing limits
+
+MAX_TOTAL_TOKENS = 8000   # safer than pushing limits
+RESERVED_TOKENS = 1000    # instruction + question + formatting + answer buffer
+MAX_CONTEXT_TOKENS = MAX_TOTAL_TOKENS - RESERVED_TOKENS
+"""
+    [ Instruction + Context + Question + Answer + Chat Formatting ] <= MAX_TOTAL_TOKENS
+    
+    Standard LLaMA 3 (local) supports ~8K tokens, so:
+        ~1000 tokens -> instructions (system prompt) + question (user input) + chat formatting + answer (model output)
+        ~6000-7000 tokens -> context
+"""
 
 
 class Reasoner:
@@ -33,12 +43,22 @@ class Reasoner:
 
         if not contexts:
             return self.fallback
+        
+        # before loop, prioritize important chunks based on scores to ensure that most relevant info is included first
+        contexts = sorted(contexts, key=lambda x: x.score, reverse=True)
 
         for i, nws in enumerate(contexts):
             chunk = f"[{i} | type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f}]\n{nws.node.get_content()}"
 
             chunk_tokens = self.count_tokens(chunk)
+
             if current_tokens + chunk_tokens > MAX_CONTEXT_TOKENS:
+                # adaptive truncate the chunk instead of dropping a chunk entirely
+                remaining_tokens = MAX_CONTEXT_TOKENS - current_tokens
+                truncated_chunk = self.tokenizer.decode(
+                    self.tokenizer.encode(chunk)[:remaining_tokens]
+                )
+                context_text += truncated_chunk
                 break
 
             context_text += chunk + "\n\n"
@@ -96,7 +116,6 @@ class Reasoner:
 
 """
     TODO: 
-        - LLMs work on tokens, not characters -> number_of_tokens(context_text) -> use tokenizer (e.g., tiktoken) as a better approach
         - add citation instruction -> "Cite sources using [0], [1], etc."
         - Prioritize table chunks differently -> If query suggests numeric lookup: Move tables first
         - Context compression -> before building prompt:
