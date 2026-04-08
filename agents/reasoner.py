@@ -4,8 +4,8 @@ import textwrap             # for removing any common leading whitespace from ev
 import tiktoken             # local tokenizer
 
 
-MAX_TOTAL_TOKENS = 8000   # safer than pushing limits
-RESERVED_TOKENS = 1000    # instruction + question + formatting + answer buffer
+MAX_TOTAL_TOKENS = 8000     # safer than pushing limits
+RESERVED_TOKENS = 1000      # instruction + question + formatting + answer buffer
 MAX_CONTEXT_TOKENS = MAX_TOTAL_TOKENS - RESERVED_TOKENS
 """
     [ Instruction + Context + Question + Answer + Chat Formatting ] <= MAX_TOTAL_TOKENS
@@ -48,7 +48,7 @@ class Reasoner:
         contexts = sorted(contexts, key=lambda x: x.score, reverse=True)
 
         for i, nws in enumerate(contexts):
-            chunk = f"[{i} | type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f}]\n{nws.node.get_content()}"
+            chunk = f"[{i}]\n(type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f})\n{nws.node.get_content()}"
 
             chunk_tokens = self.count_tokens(chunk)
 
@@ -82,6 +82,9 @@ class Reasoner:
         - If the answer is not in the context, say "I don't know."
         - Do NOT make up information.
         - Prefer concise and accurate answers.
+        - Cite sources using [0], [1], etc.    
+        - If multiple sources support the answer, cite all of them.
+        - Place citations at the end of the sentence.                     
 
         Context:
         {context_text}
@@ -116,7 +119,6 @@ class Reasoner:
 
 """
     TODO: 
-        - add citation instruction -> "Cite sources using [0], [1], etc."
         - Prioritize table chunks differently -> If query suggests numeric lookup: Move tables first
         - Context compression -> before building prompt:
             Summarize long chunks
