@@ -2,6 +2,7 @@ from agents.retriever import Retriever
 from llm import OllamaLLM
 import textwrap             # for removing any common leading whitespace from every line in text
 import tiktoken             # local tokenizer
+import re
 
 
 MAX_TOTAL_TOKENS = 8000     # safer than pushing limits
@@ -16,6 +17,27 @@ MAX_CONTEXT_TOKENS = MAX_TOTAL_TOKENS - RESERVED_TOKENS
 """
 
 
+def is_numeric_query(query: str) -> bool:
+    query = query.lower()
+
+    # keywords that suggest structured / numeric lookup
+    keywords = [
+        "how many", "how much", "number", "total", "sum",
+        "average", "mean", "max", "min", "minimum", "maximum",
+        "count", "percentage", "ratio", "compare", "difference",
+        "highest", "lowest", "increase", "decrease"
+    ]
+
+    if any(k in query for k in keywords):
+        return True
+
+    # contains digits -> often numeric intent
+    if re.search(r"\d", query):
+        return True
+
+    return False
+
+
 class Reasoner:
     def __init__(self):
         self.retriever = Retriever()
@@ -28,6 +50,15 @@ class Reasoner:
 
     def count_tokens(self, text: str) -> int:
         return len(self.tokenizer.encode(text))
+    
+    def boost_score(self, nws, is_numeric):
+        """
+            boost table chunks if query suggests numeric lookup
+        """
+        score = nws.score
+        if is_numeric and nws.node.metadata.get("type") == "table":
+            score += 0.1  
+        return score
 
     def build_prompt(self, query: str, contexts):
         """
@@ -45,7 +76,7 @@ class Reasoner:
             return self.fallback
         
         # before loop, prioritize important chunks based on scores to ensure that most relevant info is included first
-        contexts = sorted(contexts, key=lambda x: x.score, reverse=True)
+        contexts = sorted(contexts, key=lambda x: self.boost_score(x, is_numeric_query(query), reverse=True))
 
         for i, nws in enumerate(contexts):
             chunk = f"[{i}]\n(type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f})\n{nws.node.get_content()}"
@@ -119,7 +150,6 @@ class Reasoner:
 
 """
     TODO: 
-        - Prioritize table chunks differently -> If query suggests numeric lookup: Move tables first
         - Context compression -> before building prompt:
             Summarize long chunks
             Keep only relevant sentences
