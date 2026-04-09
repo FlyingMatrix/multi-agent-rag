@@ -1,3 +1,9 @@
+---
+name: rag_context_qa
+version: 1.0
+inputs: [context, query]
+---
+
 # Skill: rag_context_qa
 
 ## Description
@@ -55,4 +61,9 @@ $query
 
 Answer: <final answer>  
 Sources: [0][1]
+
+## Metadata
+name: rag_context_qa
+version: 1.0
+capabilities: [qa, rag, citation]
 
