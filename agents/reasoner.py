@@ -171,6 +171,5 @@ class Reasoner:
         - Context compression -> before building prompt:
             Summarize long chunks
             Keep only relevant sentences
-        - Add answer format control
 """
 
