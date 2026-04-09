@@ -1,7 +1,6 @@
 ---
 name: rag_context_qa
 version: 1.0
-inputs: [context, query]
 ---
 
 # Skill: rag_context_qa
@@ -45,6 +44,12 @@ Answer the question using ONLY the provided context. Do not use prior knowledge.
 - Do not repeat the question.
 - If the question has multiple parts, answer all parts if possible.
 
+## Metadata
+- name: rag_context_qa
+- version: 1.0
+- capabilities: [qa, rag, citation]
+- input: [context, query]
+
 ---
 
 ## Input
@@ -58,12 +63,6 @@ $query
 ---
 
 ## Output Format
-
 Answer: <final answer>  
 Sources: [0][1]
-
-## Metadata
-- name: rag_context_qa
-- version: 1.0
-- capabilities: [qa, rag, citation]
 
