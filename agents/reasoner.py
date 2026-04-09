@@ -110,13 +110,14 @@ class Reasoner:
         Guidelines for using context:
         - Base your answer strictly on the provided context.
         - Do not infer beyond what is explicitly stated.
-        - If the answer is not fully supported by the context, say "I don't know."
+        - Only include information that directly answers the question.
+        - If the answer is uncertain, weakly supported, or the context is empty, say "I don't know."
 
         Tables:
         - Read tables carefully by matching rows and columns.
         - Extract exact values; do not approximate.
         - If multiple rows are relevant, include all necessary values.
-        - Do not perform calculations unless explicitly supported by the table data.
+        - Perform simple calculations only if all required values are explicitly present.
 
         Conflicts:
         - If multiple sources provide conflicting information, mention the conflict and cite all relevant sources.
@@ -124,22 +125,23 @@ class Reasoner:
 
         Citations:
         - Each context chunk is labeled with an index like [0], [1], etc.
-        - Cite sources using these indices.
-        - Place citations at the end of the sentence.
-        - If multiple sources support a statement, cite all of them (e.g., [0][2]).
+        - Track which sources support the answer.
 
         Answer style:
         - Be concise, factual, and direct.
         - Do not include explanations, reasoning steps, or extra commentary.
         - Do not repeat the question.
+        - If the question has multiple parts, answer all parts if possible.
+
+        Output format:
+        Answer: <final answer>
+        Sources: [0][1]
 
         Context:
         {context_text}
 
         Question:
         {query}
-
-        Answer:
         """)
 
         return prompt
