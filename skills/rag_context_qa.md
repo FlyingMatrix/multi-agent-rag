@@ -63,7 +63,7 @@ Answer: <final answer>
 Sources: [0][1]
 
 ## Metadata
-name: rag_context_qa
-version: 1.0
-capabilities: [qa, rag, citation]
+- name: rag_context_qa
+- version: 1.0
+- capabilities: [qa, rag, citation]
 
