@@ -44,10 +44,10 @@ Answer the question using ONLY the provided context. Do not use prior knowledge.
 ## Input
 
 ### Context
-{{context}}
+$context
 
 ### Question
-{{query}}
+$query
 
 ---
 

@@ -1,6 +1,7 @@
 from agents.retriever import Retriever
+from skill_registry import SkillRegistry
 from llm import OllamaLLM
-import textwrap             # for removing any common leading whitespace from every line in text
+
 import tiktoken             # local tokenizer
 import re
 
@@ -43,6 +44,7 @@ class Reasoner:
         self.retriever = Retriever()
         self.llm = OllamaLLM(model="llama3")
         self.tokenizer = tiktoken.encoding_for_model(model_name="gpt-3.5-turbo")
+        self.skill_registry = SkillRegistry()
 
     @staticmethod
     def fallback():
@@ -95,54 +97,12 @@ class Reasoner:
             context_text += chunk + "\n\n"
             current_tokens += chunk_tokens
 
-        # build prompt with hallucination control
-        prompt = textwrap.dedent(f"""\
-        Persona:
-        You are a precise and reliable assistant for question answering using retrieved context.
-
-        Instructions:
-        Answer the question using ONLY the provided context. Do not use prior knowledge.
-
-        Context types:
-        - text: unstructured paragraphs
-        - table: structured data with rows and columns
-
-        Guidelines for using context:
-        - Base your answer strictly on the provided context.
-        - Do not infer beyond what is explicitly stated.
-        - Only include information that directly answers the question.
-        - If the answer is uncertain, weakly supported, or the context is empty, say "I don't know."
-
-        Tables:
-        - Read tables carefully by matching rows and columns.
-        - Extract exact values; do not approximate.
-        - If multiple rows are relevant, include all necessary values.
-        - Perform simple calculations only if all required values are explicitly present.
-
-        Conflicts:
-        - If multiple sources provide conflicting information, mention the conflict and cite all relevant sources.
-        - Do not attempt to resolve conflicts unless the context clearly indicates which is correct.
-
-        Citations:
-        - Each context chunk is labeled with an index like [0], [1], etc.
-        - Track which sources support the answer.
-
-        Answer style:
-        - Be concise, factual, and direct.
-        - Do not include explanations, reasoning steps, or extra commentary.
-        - Do not repeat the question.
-        - If the question has multiple parts, answer all parts if possible.
-
-        Output format:
-        Answer: <final answer>
-        Sources: [0][1]
-
-        Context:
-        {context_text}
-
-        Question:
-        {query}
-        """)
+        # build prompt with self.skill_registry.render()
+        prompt = self.skill_registry.render(
+            "rag_context_qa",
+            context=context_text,
+            query=query
+        )
 
         return prompt
 
