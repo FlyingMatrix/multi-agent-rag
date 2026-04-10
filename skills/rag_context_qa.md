@@ -65,4 +65,3 @@ $query
 ## Output Format
 Answer: <final answer>  
 Sources: [0][1]
-
