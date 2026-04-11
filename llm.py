@@ -4,19 +4,10 @@ class OllamaLLM:
     def __init__(self, model: str="llama3"):
         self.model = model
 
-    def stream_generate(self, prompt: str):
-        """
-            Streaming generation using Ollama Python client
-        """
-        stream = chat(
+    def generate(self, prompt: str) -> str:
+        response = chat(
             model=self.model,
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            stream=True
+            messages=[{"role": "user", "content": prompt}]
         )
-
-        for chunk in stream:
-            if "message" in chunk and "content" in chunk["message"]:
-                yield chunk["message"]["content"]
+        return response["message"]["content"]
 

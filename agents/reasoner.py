@@ -52,18 +52,33 @@ def parse_json(text: str) -> dict:
             "issues": ["invalid json output"],
             "corrected_answer": "I don't know."
         }
+    
+
+def is_unknown(text: str) -> bool:
+    text = text.lower()
+    return (
+        "don't know" in text or
+        "do not know" in text or
+        "not sure" in text or
+        "not available" in text
+    )
+    
+
+def stream_text(text: str):
+    """
+        Streaming UX
+    """
+    for token in text.split():
+        yield token + " "
 
 
 class Reasoner:
-    def __init__(self):
+    def __init__(self, max_retries: int = 2):
         self.retriever = Retriever()
         self.skill_registry = SkillRegistry()
         self.llm = OllamaLLM(model="llama3")
         self.tokenizer = tiktoken.encoding_for_model(model_name="gpt-3.5-turbo")
-
-    @staticmethod
-    def fallback():
-        yield "I don't know."
+        self.max_retries = max_retries
 
     def count_tokens(self, text: str) -> int:
         return len(self.tokenizer.encode(text))
@@ -77,7 +92,7 @@ class Reasoner:
             score += 0.1  
         return score
 
-    def build_prompt(self, query: str, contexts):
+    def build_prompt(self, query: str, contexts, feedback: str = ""):
         """
             the contexts is the response from the retriever agent -> a list of NodeWithScore objects
 
@@ -90,10 +105,14 @@ class Reasoner:
         current_tokens = 0
 
         if not contexts:
-            return self.fallback
+            return "Answer: I don't know.\nSources: []"
         
         # before loop, prioritize important chunks based on scores to ensure that most relevant info is included first
-        contexts = sorted(contexts, key=lambda x: self.boost_score(x, is_numeric_query(query), reverse=True))
+        contexts = sorted(
+            contexts,
+            key=lambda x: self.boost_score(x, is_numeric_query(query)),
+            reverse=True
+        )
 
         for i, nws in enumerate(contexts):
             chunk = f"[{i}]\n(type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f})\n{nws.node.get_content()}"
@@ -119,11 +138,24 @@ class Reasoner:
             query=query
         )
 
-        return prompt
+        # inject feedback for retries
+        if feedback:
+            prompt += f"\n\nPrevious attempt issues:\n{feedback}\nPlease fix these issues."
+
+        return prompt, context_text
+    
+    def run_critic(self, context_text: str, query: str, answer: str):
+        prompt = self.skill_registry.render(
+            "rag_context_critic",
+            context=context_text,
+            query=query,
+            answer=answer
+        )
+        return self.llm.generate(prompt)
 
     def run(self, query: str):
         """
-            pipeline: rewrite_query -> retrieve -> build_prompt -> generate
+            pipeline: rewrite_query -> retrieve -> QA + Critic loop
         """
         # rewrite query to improve retrieval quality 
         original_query = query
@@ -132,14 +164,44 @@ class Reasoner:
         # get the top_k most similar nodes wrapped with scores, retrieval optimized
         contexts = self.retriever.retrieve(rewritten_query)
 
-        # use original_query and contexts to create prompt, answer grounded in original question
-        prompt = self.build_prompt(original_query, contexts)
+        feedback = ""
 
-        # pass the prompt to llm to generate results
-        results = self.llm.stream_generate(prompt)
+        # QA + Critic loop
+        for attempt in range(self.max_retries + 1):
+            # Step 1: QA generation
+            prompt, context_text = self.build_prompt(original_query, contexts, feedback)
+            answer = self.llm.generate(prompt)
 
-        return results
-    
+            # Step 2: Critic evaluation
+            if not is_unknown(answer):
+                critic_raw = self.run_critic(context_text, original_query, answer)  # critic_raw -> JSON
+                critic = parse_json(critic_raw)                                     # critic -> dictionary
+
+                verdict = critic.get("verdict", "incorrect")
+                issues = critic.get("issues", [])
+                if not issues:
+                    issues = ["Answer marked incorrect but no issues provided."]
+                corrected_answer = critic.get("corrected_answer", "I don't know.")
+
+                # logging
+                print(f"[Attempt {attempt+1}], Verdict: {verdict}, Issues: {issues}")
+
+                # if correct -> stream answer
+                if verdict == "correct":
+                    return stream_text(answer)
+
+                # if last attempt -> stream corrected answer
+                if attempt == self.max_retries:
+                    return stream_text(corrected_answer)
+                
+                # prepare feedback for next iteration
+                feedback = "\n".join(f"- {issue}" for issue in issues)
+            else:
+                if attempt == self.max_retries:
+                    return stream_text("I don't know.")
+                feedback = "- The answer was 'I don't know'. Try to find a supported answer if possible."
+                continue
+   
 
 """
     TODO: 
