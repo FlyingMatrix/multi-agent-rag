@@ -4,6 +4,7 @@ from llm import OllamaLLM
 
 import tiktoken             # local tokenizer
 import re
+import json
 
 
 MAX_TOTAL_TOKENS = 8000     # safer than pushing limits
@@ -39,12 +40,26 @@ def is_numeric_query(query: str) -> bool:
     return False
 
 
+def parse_json(text: str) -> dict:
+    """
+        Safely parse JSON text and fail gracefully if it's invalid.
+    """
+    try:
+        return json.loads(text)     # json.loads() converts a JSON string into a Python dictionary
+    except json.JSONDecodeError:
+        return {
+            "verdict": "incorrect",
+            "issues": ["invalid json output"],
+            "corrected_answer": "I don't know."
+        }
+
+
 class Reasoner:
     def __init__(self):
         self.retriever = Retriever()
+        self.skill_registry = SkillRegistry()
         self.llm = OllamaLLM(model="llama3")
         self.tokenizer = tiktoken.encoding_for_model(model_name="gpt-3.5-turbo")
-        self.skill_registry = SkillRegistry()
 
     @staticmethod
     def fallback():
