@@ -60,7 +60,9 @@ def is_unknown(text: str) -> bool:
         "don't know" in text or
         "do not know" in text or
         "not sure" in text or
-        "not available" in text
+        "not available" in text or
+        "not provided" in text or
+        "context does not" in text
     )
     
 
@@ -105,12 +107,13 @@ class Reasoner:
         current_tokens = 0
 
         if not contexts:
-            return "Answer: I don't know.\nSources: []"
+            return ("Answer: I don't know.\nSources: []", "")   # (prompt, context_text)
         
         # before loop, prioritize important chunks based on scores to ensure that most relevant info is included first
+        is_numeric = is_numeric_query(query)
         contexts = sorted(
             contexts,
-            key=lambda x: self.boost_score(x, is_numeric_query(query)),
+            key=lambda x: self.boost_score(x, is_numeric),
             reverse=True
         )
 
@@ -140,7 +143,15 @@ class Reasoner:
 
         # inject feedback for retries
         if feedback:
-            prompt += f"\n\nPrevious attempt issues:\n{feedback}\nPlease fix these issues."
+            prompt += f"""
+
+            CRITICAL FEEDBACK FROM PREVIOUS ATTEMPT:
+            You MUST fix the following issues:
+
+            {feedback}
+
+            Do not repeat these mistakes.
+            """
 
         return prompt, context_text
     
