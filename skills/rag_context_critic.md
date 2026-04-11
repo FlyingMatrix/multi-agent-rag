@@ -54,18 +54,24 @@ Evaluate the given answer using ONLY the provided context. Do not use prior know
 
 ---
 
-## Output Format
+## Output Format (JSON)
 
-Verdict: <correct | incorrect>
+Return a valid JSON object with the following fields:
 
-Issues:
-- <issue 1>
-- <issue 2>
+{
+  "verdict": "correct" | "incorrect",
+  "issues": ["list of problems"],
+  "corrected_answer": "string"
+}
 
-Corrected Answer:
-- If verdict is "correct", repeat the original answer.
-- If verdict is "incorrect", provide a corrected answer using ONLY the context.
-- If correction is not possible, say "I don't know."
+Rules:
+- "verdict" must be either "correct" or "incorrect".
+- "issues" must list all detected problems (empty if none).
+- "corrected_answer":
+  - If verdict is "correct", repeat the original answer.
+  - If verdict is "incorrect", provide a corrected answer using ONLY the context.
+  - If correction is not possible, return "I don't know."
+- Output ONLY the JSON. No extra text.
 
 ---
 
