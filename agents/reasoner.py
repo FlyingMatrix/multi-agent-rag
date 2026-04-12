@@ -1,22 +1,37 @@
 from agents.retriever import Retriever
 from skill_registry import SkillRegistry
 from llm import OllamaLLM
+from typing import Iterable
+from dataclasses import dataclass
 
 import tiktoken             # local tokenizer
 import re
 import json
 
 
-MAX_TOTAL_TOKENS = 8000     # safer than pushing limits
-RESERVED_TOKENS = 1000      # instruction + question + formatting + answer buffer
-MAX_CONTEXT_TOKENS = MAX_TOTAL_TOKENS - RESERVED_TOKENS
-"""
-    [ Instruction + Context + Question + Answer + Chat Formatting ] <= MAX_TOTAL_TOKENS
-    
-    Standard LLaMA 3 (local) supports ~8K tokens, so:
-        ~1000 tokens -> instructions (system prompt) + question (user input) + chat formatting + answer (model output)
-        ~6000-7000 tokens -> context
-"""
+@dataclass(frozen=True)
+class Config:
+    MODEL: str = "llama3"   # selected model
+
+MODEL_CONTEXT = {
+    "llama3": {
+        "ctx": 8192,        # model context window (input + output)
+        "reserve": 1000     # reserved tokens: prompt + answer buffer
+    },
+}
+
+# select model config
+MODEL = Config.MODEL
+model_cfg = MODEL_CONTEXT.get(MODEL, MODEL_CONTEXT["llama3"])
+
+# total available context window of the model
+MAX_TOTAL_TOKENS = model_cfg["ctx"]
+
+# reserved space for system prompt + user query + answer generation buffer
+RESERVED = model_cfg["reserve"]
+
+# usable space for retrieved context chunks (RAG documents)
+MAX_CONTEXT_TOKENS = max(0, MAX_TOTAL_TOKENS - RESERVED)
 
 
 def is_numeric_query(query: str) -> bool:
@@ -54,23 +69,27 @@ def parse_json(text: str) -> dict:
         }
     
 
-def is_unknown(text: str) -> bool:
+def should_critic(text: str) -> bool:
     text = text.lower()
-    return (
-        "don't know" in text or
-        "do not know" in text or
-        "not sure" in text or
-        "not available" in text or
-        "not provided" in text or
-        "context does not" in text
-    )
+    weak_signals = [
+        "don't know",
+        "do not know",
+        "not sure",
+        "not available",
+        "not provided",
+        "context does not",
+        "cannot find",
+        "does not contain",
+        "no information"
+    ]
+    return not any(w in text for w in weak_signals)
     
 
 def stream_text(text: str):
     """
         Streaming UX
     """
-    for token in text.split():
+    for token in re.findall(r"\S+|\n", text):
         yield token + " "
 
 
@@ -78,7 +97,7 @@ class Reasoner:
     def __init__(self, max_retries: int = 2):
         self.retriever = Retriever()
         self.skill_registry = SkillRegistry()
-        self.llm = OllamaLLM(model="llama3")
+        self.llm = OllamaLLM(model=MODEL)
         self.tokenizer = tiktoken.encoding_for_model(model_name="gpt-3.5-turbo")
         self.max_retries = max_retries
 
@@ -105,12 +124,12 @@ class Reasoner:
         """
         context_text = ""
         current_tokens = 0
+        is_numeric = is_numeric_query(query)
 
         if not contexts:
             return ("Answer: I don't know.\nSources: []", "")   # (prompt, context_text)
         
         # before loop, prioritize important chunks based on scores to ensure that most relevant info is included first
-        is_numeric = is_numeric_query(query)
         contexts = sorted(
             contexts,
             key=lambda x: self.boost_score(x, is_numeric),
@@ -118,6 +137,9 @@ class Reasoner:
         )
 
         for i, nws in enumerate(contexts):
+            if current_tokens >= MAX_CONTEXT_TOKENS:
+                break
+
             chunk = f"[{i}]\n(type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f})\n{nws.node.get_content()}"
 
             chunk_tokens = self.count_tokens(chunk)
@@ -145,8 +167,10 @@ class Reasoner:
         if feedback:
             prompt += f"""
 
-            CRITICAL FEEDBACK FROM PREVIOUS ATTEMPT:
-            You MUST fix the following issues:
+            CRITICAL INSTRUCTIONS (HIGHEST PRIORITY):
+            You made mistakes in the previous attempt.
+
+            You MUST fix ALL of the following issues:
 
             {feedback}
 
@@ -164,7 +188,7 @@ class Reasoner:
         )
         return self.llm.generate(prompt)
 
-    def run(self, query: str):
+    def run(self, query: str) -> Iterable[str]:
         """
             pipeline: rewrite_query -> retrieve -> QA + Critic loop
         """
@@ -184,7 +208,7 @@ class Reasoner:
             answer = self.llm.generate(prompt)
 
             # Step 2: Critic evaluation
-            if not is_unknown(answer):
+            if should_critic(answer):
                 critic_raw = self.run_critic(context_text, original_query, answer)  # critic_raw -> JSON
                 critic = parse_json(critic_raw)                                     # critic -> dictionary
 
