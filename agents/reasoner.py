@@ -3,33 +3,19 @@ from skill_registry import SkillRegistry
 from llm import OllamaLLM
 from typing import Iterable
 from dataclasses import dataclass
+from config import LLM_NAME, LLM_CONTEXT
 
 import tiktoken             # local tokenizer
 import re
 import json
 
 
-@dataclass(frozen=True)
-class Config:
-    MODEL: str = "llama3"   # selected model
-
-MODEL_CONTEXT = {
-    "llama3": {
-        "ctx": 8192,        # model context window (input + output)
-        "reserve": 1000     # reserved tokens: prompt + answer buffer
-    },
-}
-
-# select model config
-MODEL = Config.MODEL
-model_cfg = MODEL_CONTEXT.get(MODEL, MODEL_CONTEXT["llama3"])
+model_cfg = LLM_CONTEXT.get(LLM_NAME, LLM_CONTEXT["llama3"])
 
 # total available context window of the model
 MAX_TOTAL_TOKENS = model_cfg["ctx"]
-
 # reserved space for system prompt + user query + answer generation buffer
 RESERVED = model_cfg["reserve"]
-
 # usable space for retrieved context chunks (RAG documents)
 MAX_CONTEXT_TOKENS = max(0, MAX_TOTAL_TOKENS - RESERVED)
 
@@ -244,4 +230,3 @@ class Reasoner:
             Summarize long chunks
             Keep only relevant sentences
 """
-

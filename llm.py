@@ -1,7 +1,8 @@
 from ollama import chat
+from config import LLM_NAME
 
 class OllamaLLM:
-    def __init__(self, model: str="llama3"):
+    def __init__(self, model: str=LLM_NAME):
         self.model = model
 
     def generate(self, prompt: str) -> str:

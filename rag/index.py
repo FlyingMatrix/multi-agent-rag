@@ -2,7 +2,7 @@ from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
 
-from config import CHROMA_PATH, EMBED_MODEL
+from config import VECTOR_DATABASE_PATH, EMBED_MODEL
 
 
 def build_index(nodes):
@@ -10,7 +10,7 @@ def build_index(nodes):
         Build and persist a Chroma-backed index:
         takes text chunks (nodes) -> converts into embeddings -> stores in a vector database (Chroma)
     """
-    chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)                 # start a persistent Chroma database
+    chroma_client = chromadb.PersistentClient(path=VECTOR_DATABASE_PATH)                 # start a persistent Chroma database
     collection = chroma_client.get_or_create_collection("rag_collection")       # create a collection for vectors
     vector_store = ChromaVectorStore(chroma_collection=collection)              # wrap with LlamaIndex adapter
     storage_context = StorageContext.from_defaults(vector_store=vector_store)   # create storage context -> tell LlamaIndex to use this vector store for storing data
@@ -30,7 +30,7 @@ def load_index():
         Load existing index:
         reconnects to the stored data (without recomputing embeddings)
     """
-    chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    chroma_client = chromadb.PersistentClient(path=VECTOR_DATABASE_PATH)
     collection = chroma_client.get_or_create_collection("rag_collection")
     vector_store = ChromaVectorStore(chroma_collection=collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
