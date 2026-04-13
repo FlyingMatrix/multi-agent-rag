@@ -1,6 +1,6 @@
 from agents.retriever import Retriever
 from skill_registry import SkillRegistry
-from llm import OllamaLLM
+from llm import LLM
 from typing import Iterable
 from dataclasses import dataclass
 from config import LLM_NAME, LLM_CONTEXT
@@ -83,7 +83,7 @@ class Reasoner:
     def __init__(self, max_retries: int = 2):
         self.retriever = Retriever()
         self.skill_registry = SkillRegistry()
-        self.llm = OllamaLLM(model=MODEL)
+        self.llm = LLM(model=LLM_NAME)
         self.tokenizer = tiktoken.encoding_for_model(model_name="gpt-3.5-turbo")
         self.max_retries = max_retries
 
