@@ -19,7 +19,6 @@ class Config:
     CHUNK_OVERLAP: int = 50                                             # Number of overlapping tokens between consecutive chunks to preserve context
 
 # ---- Builders ----
-
 def get_llm_name(config: Config):
     return os.getenv("LLM", config.LLM_NAME)
 
