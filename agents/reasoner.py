@@ -225,4 +225,5 @@ class Reasoner:
         - Context compression -> before building prompt:
             Summarize long chunks
             Keep only relevant sentences
+        - Auto-adjust chunk size based on query
 """
