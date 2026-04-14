@@ -1,11 +1,14 @@
 from typing import List
-
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import Document, Node
-
-from config import CHUNK_SIZE, CHUNK_OVERLAP
+from settings import Settings
 
 import re
+
+
+settings = Settings()
+CHUNK_SIZE = settings.chunk_size
+CHUNK_OVERLAP = settings.chunk_overlap
 
 MAX_TABLE_CHARS = 3000  # threshold for large tables
 

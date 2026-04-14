@@ -1,5 +1,10 @@
 from ollama import chat
-from config import LLM_NAME
+from settings import Settings
+
+
+settings = Settings()
+LLM_NAME = settings.llm_name
+
 
 class LLM:
     def __init__(self, model: str=LLM_NAME):

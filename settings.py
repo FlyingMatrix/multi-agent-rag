@@ -30,6 +30,11 @@ class Settings:
     chunk_size: int = field(default_factory=lambda: get_env_int("CHUNK_SIZE", 512))
     chunk_overlap: int = field(default_factory=lambda: get_env_int("CHUNK_OVERLAP", 50))
 
+    # validation: __post_init__ is a dataclass lifecycle hook, which runs automatically right after object creation, perfect for validation of setting values
+    def __post_init__(self):
+        if self.chunk_overlap >= self.chunk_size:
+            raise ValueError("chunk_overlap must be smaller than chunk_size")
+
     # ---- Static model capabilities ----
     LLM_CONTEXT: ClassVar[Dict[str, Dict[str, int]]] = {
         "llama3": {"ctx": 8192, "reserve": 1000},

@@ -1,8 +1,14 @@
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.vector_stores.chroma import ChromaVectorStore
+from settings import Settings
+from factory import build_embed_model
+
 import chromadb
 
-from config import VECTOR_DATABASE_PATH, EMBED_MODEL
+
+settings = Settings()
+EMBED_MODEL = build_embed_model(settings)
+VECTOR_DATABASE_PATH = settings.vector_database_path
 
 
 def build_index(nodes):

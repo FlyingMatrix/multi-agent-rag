@@ -3,21 +3,17 @@ from skill_registry import SkillRegistry
 from llm import LLM
 from typing import Iterable
 from dataclasses import dataclass
-from config import LLM_NAME, LLM_CONTEXT
+from settings import Settings
 
 import tiktoken             # local tokenizer
 import re
 import json
 
 
-model_cfg = LLM_CONTEXT.get(LLM_NAME, LLM_CONTEXT["llama3"])
+settings = Settings()
 
-# total available context window of the model
-MAX_TOTAL_TOKENS = model_cfg["ctx"]
-# reserved space for system prompt + user query + answer generation buffer
-RESERVED = model_cfg["reserve"]
-# usable space for retrieved context chunks (RAG documents)
-MAX_CONTEXT_TOKENS = max(0, MAX_TOTAL_TOKENS - RESERVED)
+LLM_NAME = settings.llm_name
+MAX_CONTEXT_TOKENS = settings.max_context_tokens
 
 
 def is_numeric_query(query: str) -> bool:
