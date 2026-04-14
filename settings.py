@@ -36,4 +36,19 @@ class Settings:
         "mistral": {"ctx": 8192, "reserve": 1000},
     }
 
+    # ---- Derived properties ----
+    @property
+    def llm_context(self) -> Dict[str, int]:
+        return self.LLM_CONTEXT.get(self.llm_name, self.LLM_CONTEXT["llama3"])
     
+    @property
+    def max_total_tokens(self) -> int:
+        return self.llm_context["ctx"]
+    
+    @property
+    def reserved_tokens(self) -> int:
+        return self.llm_context["reserve"]
+    
+    @property
+    def max_context_tokens(self) -> int:
+        return max(0, self.max_total_tokens - self.reserved_tokens)
