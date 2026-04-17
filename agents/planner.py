@@ -13,27 +13,24 @@ class Planner:
     """
 
     def plan(self, query: str) -> dict:
-        query_lower = query.lower()
+        query_clean = query.strip()
+        
+        # Keywords that should be REMOVED from the start of the query
+        context_words = [r"^difference between\s+", r"^compare\s+", r"^between\s+"]
+        for word in context_words:
+            query_clean = re.sub(word, "", query_clean, flags=re.IGNORECASE)
 
-        # detect multi-part queries
-        multi_signals = [" and ", " compare ", " vs ", " difference ", "between"]
+        # Keywords that actually SEPARATE the topics
+        split_signals = [" and ", " vs ", " , ", " or "]
+        
+        # Detect and Split
+        pattern = "|".join(map(re.escape, split_signals))
+        parts = [q.strip() for q in re.split(pattern, query_clean, flags=re.IGNORECASE) if q.strip()]
 
-        if any(s in query_lower for s in multi_signals):
-            # create pattern
-            pattern = "|".join(map(re.escape, multi_signals))
-            # split query
-            parts = [q.strip() for q in re.split(pattern, query, flags=re.IGNORECASE) if q.strip()]
-
-            if len(parts) > 1:
-                return {
-                    "type": "multi",
-                    "sub_queries": parts
-                }
-
-        return {
-            "type": "simple",
-            "sub_queries": [query]
-        }
+        if len(parts) > 1:
+            return {"type": "multi", "sub_queries": parts}
+            
+        return {"type": "simple", "sub_queries": [query]}
 
 
 """
