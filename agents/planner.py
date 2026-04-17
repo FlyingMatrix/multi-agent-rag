@@ -1,4 +1,7 @@
 import re
+import json
+import ollama
+from typing import Dict, List
 
 class Planner:
     """
@@ -34,5 +37,12 @@ class Planner:
 
 
 """
-    TODO: upgrade Planner to LLM-powered decomposition (big performance jump)
+    TODO: 
+        - upgrade Planner to LLM-powered decomposition (big performance jump)
+        - adding "Context Injection":
+            One common issue with decomposition is that sub-queries lose the original intent. 
+            You can tweak your prompt to ensure the LLM adds context back into the sub-queries:
+            - User: "Compare the battery life of the iPhone 15 and the S24."
+            - Bad Decomposition: ["iPhone 15", "S24"] (The RAG searcher won't know what to look for).
+            - Good Decomposition: ["Battery life specs of iPhone 15", "Battery life specs of Samsung Galaxy S24"].
 """
