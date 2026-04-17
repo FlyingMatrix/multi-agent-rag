@@ -16,7 +16,7 @@ def build_index(nodes):
         Build and persist a Chroma-backed index:
         takes text chunks (nodes) -> converts into embeddings -> stores in a vector database (Chroma)
     """
-    chroma_client = chromadb.PersistentClient(path=VECTOR_DATABASE_PATH)                 # start a persistent Chroma database
+    chroma_client = chromadb.PersistentClient(path=VECTOR_DATABASE_PATH)        # start a persistent Chroma database
     collection = chroma_client.get_or_create_collection("rag_collection")       # create a collection for vectors
     vector_store = ChromaVectorStore(chroma_collection=collection)              # wrap with LlamaIndex adapter
     storage_context = StorageContext.from_defaults(vector_store=vector_store)   # create storage context -> tell LlamaIndex to use this vector store for storing data
