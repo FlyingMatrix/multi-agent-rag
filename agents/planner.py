@@ -1,3 +1,5 @@
+import re
+
 class Planner:
     """
     Planner decides how to solve the query:
@@ -17,8 +19,10 @@ class Planner:
         multi_signals = [" and ", " compare ", " vs ", " difference ", "between"]
 
         if any(s in query_lower for s in multi_signals):
+            # create pattern
+            pattern = "|".join(map(re.escape, multi_signals))
             # split query
-            parts = [q.strip() for q in query.split(" and ") if q.strip()]
+            parts = [q.strip() for q in re.split(pattern, query, flags=re.IGNORECASE) if q.strip()]
 
             if len(parts) > 1:
                 return {
@@ -33,5 +37,7 @@ class Planner:
 
 
 """
+    NEXT: Connect Planner into RAG pipeline
+
     TODO: upgrade Planner to LLM-powered decomposition (big performance jump)
 """
