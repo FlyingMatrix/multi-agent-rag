@@ -1,4 +1,5 @@
 from agents.retriever import Retriever
+from agents.planner import Planner
 from skill_registry import SkillRegistry
 from llm import LLM
 from typing import Iterable
@@ -78,6 +79,7 @@ def stream_text(text: str):
 class Reasoner:
     def __init__(self, max_retries: int = 2):
         self.retriever = Retriever()
+        self.planner = Planner()
         self.skill_registry = SkillRegistry()
         self.llm = LLM(model=LLM_NAME)
         self.tokenizer = tiktoken.encoding_for_model(model_name="gpt-3.5-turbo")
@@ -176,17 +178,23 @@ class Reasoner:
         """
         # rewrite query to improve retrieval quality 
         original_query = query
-        rewritten_query = self.llm.rewrite_query(query)
 
-        # get the top_k most similar nodes wrapped with scores, retrieval optimized
-        contexts = self.retriever.retrieve(rewritten_query)
+        # use planner to decide how to solve the query (if splitting into sub_query is necessary)
+        plan = self.planner.plan(original_query)
+        all_contexts = []
+
+        # for each sub_query, get the top_k most similar nodes wrapped with scores, retrieval optimized
+        for sub_query in plan["sub_queries"]:
+            rewritten = self.llm.rewrite_query(sub_query)
+            contexts = self.retriever.retrieve(rewritten)
+            all_contexts.extend(contexts)
 
         feedback = ""
 
         # QA + Critic loop
         for attempt in range(self.max_retries + 1):
             # Step 1: QA generation
-            prompt, context_text = self.build_prompt(original_query, contexts, feedback)
+            prompt, context_text = self.build_prompt(original_query, all_contexts, feedback)
             answer = self.llm.generate(prompt)
 
             # Step 2: Critic evaluation

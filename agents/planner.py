@@ -34,7 +34,5 @@ class Planner:
 
 
 """
-    NEXT: Connect Planner into RAG pipeline
-
     TODO: upgrade Planner to LLM-powered decomposition (big performance jump)
 """
