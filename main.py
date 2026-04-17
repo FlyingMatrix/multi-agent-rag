@@ -25,21 +25,18 @@ def main(verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable ver
 if __name__ == "__main__":
     app()                                   # call app() to start CLI
 
-"""
-    RAG System Architecture:
+"""  
+    ✅ Complete Multi-Agent RAG Core Architecture:
 
         User Query
             ↓
-        Router
+        Router (entry control)
             ↓
-        Reasoner
-            ├── Planner
-            │      ↓
-            │   sub-queries
+        Planner (query decomposition)
             ↓
         Retriever (multiple calls)
             ↓
-        Reasoner (QA)
+        Reasoner (grounded QA)
             ↓
-        Critic (loop)
+        Critic (self-correction loop)
 """

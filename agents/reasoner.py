@@ -174,21 +174,55 @@ class Reasoner:
 
     def run(self, query: str) -> Iterable[str]:
         """
-            pipeline: rewrite_query -> retrieve -> QA + Critic loop
+            pipeline: 
+                plan query -> rewrite (sub)query -> retrieve -> build prompt -> generate answers -> critic evaluation loop
+
+            adaptive query retrieval strategy:
+                - simple -> fast path:
+                    1 query -> 1 retrieval -> contexts -> global sorting
+                - complex -> multi-step retrieval:
+                    N sub-queries -> multi-step retrieval -> merged -> deduplicated -> global sorting -> richer contexts
         """
-        # rewrite query to improve retrieval quality 
         original_query = query
-
-        # use planner to decide how to solve the query (if splitting into sub_query is necessary)
+        # use planner to decide how to solve the query (if split into sub_query is necessary)
         plan = self.planner.plan(original_query)
-        all_contexts = []
 
-        # for each sub_query, get the top_k most similar nodes wrapped with scores, retrieval optimized
-        for sub_query in plan["sub_queries"]:
-            rewritten = self.llm.rewrite_query(sub_query)
-            contexts = self.retriever.retrieve(rewritten)
-            all_contexts.extend(contexts)
+        # ---- simple query (fast path) ----
+        if plan["type"] == "simple":
+            # rewrite query to improve retrieval quality 
+            rewritten = self.llm.rewrite_query(original_query)
+            all_contexts = self.retriever.retrieve(rewritten)
 
+        # ---- multi query ----
+        else:
+            all_contexts = []
+
+            # for each sub_query, get the top_k most similar nodes wrapped with scores, retrieval optimized
+            for sub_query in plan["sub_queries"]:
+                # rewrite sub_query to improve retrieval quality 
+                rewritten = self.llm.rewrite_query(sub_query)
+                contexts = self.retriever.retrieve(rewritten)
+                all_contexts.extend(contexts)
+
+            # deduplicate all_contexts by node id to avoid wasting tokens and hurting ranking
+            seen = set()
+            unique_contexts = []
+
+            for nws in all_contexts:
+                node_id = nws.node.node_id
+                if node_id not in seen:
+                    seen.add(node_id)
+                    unique_contexts.append(nws)
+
+            all_contexts = unique_contexts
+        
+        # sort all contexts globally
+        all_contexts = sorted(all_contexts, key=lambda x: x.score, reverse=True)
+
+        # empty retrieval edge case
+        if not all_contexts:
+            return stream_text("I don't know.")
+        
         feedback = ""
 
         # QA + Critic loop
@@ -234,4 +268,5 @@ class Reasoner:
             Summarize long chunks
             Keep only relevant sentences
         - Auto-adjust chunk size based on query
+        - Reranker after retrieval
 """
