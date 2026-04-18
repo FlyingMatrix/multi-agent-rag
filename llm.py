@@ -10,10 +10,17 @@ class LLM:
     def __init__(self, model: str=LLM_NAME):
         self.model = model
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, system_prompt: str = None, **kwargs) -> str:
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        
+        messages.append({"role": "user", "content": prompt})
+
         response = chat(
             model=self.model,
-            messages=[{"role": "user", "content": prompt}]
+            messages=messages,
+            options=kwargs  # Pass through temperature or other settings
         )
         return response["message"]["content"]
 
