@@ -18,7 +18,7 @@ def handle_query(query: str):
 
 def query_command(query: str):
 
-    print(f"Query: {query}", style="green")
+    print(f"[green]Query: {query}[/green]")
 
     stream = handle_query(query)
     for token in stream:

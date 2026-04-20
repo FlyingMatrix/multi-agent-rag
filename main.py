@@ -8,7 +8,7 @@ from rich import print                      # an enhanced print function for sty
 app = typer.Typer(help="RAG Agent CLI")     # "RAG Agent CLI" is the help description shown when running "python main.py --help"
 
 # register commands
-app.command(name="ingest")(ingest_command)  # register externally defined function "def ingest_command()" -> python main.py ingest ./vector_database
+app.command(name="ingest")(ingest_command)  # register externally defined function "def ingest_command()" -> python main.py ingest ./files
 app.command(name="query")(query_command)    # python main.py query "What is AI?"
 
 
