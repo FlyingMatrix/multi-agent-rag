@@ -40,14 +40,24 @@ def is_numeric_query(query: str) -> bool:
 
 def parse_json(text: str) -> dict:
     """
-        Safely parse JSON text and fail gracefully if it's invalid.
+        Advanced JSON extractor: handles markdown blocks and model chatter.
     """
     try:
-        return json.loads(text)     # json.loads() converts a JSON string into a Python dictionary
+        # 1. Try a clean parse first
+        return json.loads(text.strip())
     except json.JSONDecodeError:
+        # 2. Try to find JSON inside code blocks or curly braces
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+        
+        # 3. Final Fallback
         return {
             "verdict": "incorrect",
-            "issues": ["invalid json output"],
+            "issues": ["The model failed to provide a valid JSON structure."],
             "corrected_answer": "I don't know."
         }
     
