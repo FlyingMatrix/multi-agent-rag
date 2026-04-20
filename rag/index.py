@@ -1,7 +1,7 @@
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from settings import Settings
-from factory import build_embed_model
+from embedding import build_embed_model
 
 import chromadb
 
