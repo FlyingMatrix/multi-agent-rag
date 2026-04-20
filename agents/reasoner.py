@@ -82,7 +82,7 @@ class Reasoner:
         self.planner = Planner()
         self.skill_registry = SkillRegistry()
         self.llm = LLM(model=LLM_NAME)
-        self.tokenizer = tiktoken.encoding_for_model(model_name="gpt-3.5-turbo")
+        self.tokenizer = tiktoken.get_encoding("cl100k_base")   # generic tokenizer fallback working reasonably well across models
         self.max_retries = max_retries
 
     def count_tokens(self, text: str) -> int:
@@ -229,7 +229,11 @@ class Reasoner:
         for attempt in range(self.max_retries + 1):
             # Step 1: QA generation
             prompt, context_text = self.build_prompt(original_query, all_contexts, feedback)
-            answer = self.llm.generate(prompt)
+            # answer = self.llm.generate(prompt)
+            answer_stream = self.llm.stream(prompt)
+            answer = ""
+            for token in answer_stream:
+                answer += token
 
             # Step 2: Critic evaluation
             if should_critic(answer):
