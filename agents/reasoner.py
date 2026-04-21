@@ -285,4 +285,5 @@ class Reasoner:
         - Auto-adjust chunk size based on query
         - Reranker after retrieval
         - Code and formula format
+        - Print out detailed sources info (e.g.: index, file, etc.)
 """
