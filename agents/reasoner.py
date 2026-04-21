@@ -284,4 +284,5 @@ class Reasoner:
             Keep only relevant sentences
         - Auto-adjust chunk size based on query
         - Reranker after retrieval
+        - Code and formula format
 """

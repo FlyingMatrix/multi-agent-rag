@@ -57,3 +57,21 @@ class Settings:
     @property
     def max_context_tokens(self) -> int:
         return max(0, self.max_total_tokens - self.reserved_tokens)
+    
+
+"""
+    TODO: 
+        - Use suitable Ollama models for each role:
+
+        Role     | Top Pick          | Key Strength
+        ---------|-------------------|-----------------------------------------------------------------------------------------------
+        Planner  | Llama 3.1 8B      | Excellent logic-to-size ratio.
+                 | Mistral v0.3      | Llama 3.1 is specifically tuned for tool use and structured planning.
+        ---------|-------------------|-----------------------------------------------------------------------------------------------
+        Reasoner | Mistral Nemo 12B  | The Reasoner needs to handle large contexts.
+                 | Phi-3 Medium      | Mistral Nemo has a 128k context window and handles technical nuances better than 8B models.
+        ---------|-------------------|-----------------------------------------------------------------------------------------------
+        Critic   | Qwen2.5 7B        | Qwen2.5 is remarkably good at strict instruction following and coding/logic,
+                 | Llama 3.1 8B      | making it great for "grading" the reasoner's output.
+        
+"""
