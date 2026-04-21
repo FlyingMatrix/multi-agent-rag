@@ -9,6 +9,7 @@ from settings import Settings
 import tiktoken             # local tokenizer
 import re
 import json
+from rich import print
 
 
 settings = Settings()
