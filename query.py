@@ -22,7 +22,7 @@ def query_command(query: str):
 
     stream = handle_query(query)
     for token in stream:
-        print(f"[blue]{token}[/blue]", end="")
+        print(f"[cyan]{token}[/cyan]", end="")
 
     print()
 

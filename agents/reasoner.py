@@ -253,11 +253,11 @@ class Reasoner:
                 verdict = critic.get("verdict", "incorrect")
                 issues = critic.get("issues", [])
                 if not issues:
-                    issues = ["Answer marked incorrect but no issues provided."]
+                    issues = "Answer marked incorrect but no issues provided."
                 corrected_answer = critic.get("corrected_answer", "I don't know.")
 
                 # logging
-                print(f"[Attempt {attempt+1}], Verdict: {verdict}, Issues: {issues}")
+                print(f"[yellow]Attempt: {attempt+1}, Verdict: {verdict}, Issues: {issues}[/yellow]")
 
                 # if correct -> stream answer
                 if verdict == "correct":
