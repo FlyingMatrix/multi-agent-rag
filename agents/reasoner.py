@@ -93,7 +93,7 @@ class Reasoner:
         self.planner = Planner()
         self.skill_registry = SkillRegistry()
         self.llm = LLM(model=LLM_NAME)
-        self.tokenizer = tiktoken.get_encoding("cl100k_base")   # generic tokenizer fallback working reasonably well across models
+        self.tokenizer = tiktoken.get_encoding("cl100k_base")   # generic subword tokenization scheme working reasonably well across models
         self.max_retries = max_retries
 
     def count_tokens(self, text: str) -> int:
@@ -279,6 +279,7 @@ class Reasoner:
 
 """
     TODO: 
+        - Write tokenization scheme ("cl100k_base") into settings.py 
         - Context compression -> before building prompt:
             Summarize long chunks
             Keep only relevant sentences
