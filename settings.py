@@ -15,7 +15,12 @@ def get_env_int(key: str, default: int) -> int:
 @dataclass(frozen=True)
 class Settings:
     # ---- Core ----
-    llm_name: str = field(default_factory=lambda: get_env("LLM", "llama3"))
+    planner_llm: str = field(default_factory=lambda: get_env("PLANNER_LLM", "llama3"))
+    reasoner_llm: str = field(default_factory=lambda: get_env("REASONER_LLM", "mistral"))
+    critic_llm: str = field(default_factory=lambda: get_env("CRITIC_LLM", "qwen3:8b"))
+
+    llm_name: str = field(default_factory=lambda: get_env("LLM", "llama3"))     # to be removed
+
     embed_model_name: str = field(
         default_factory=lambda: get_env(
             "EMBED_MODEL",
@@ -36,9 +41,10 @@ class Settings:
             raise ValueError("chunk_overlap must be smaller than chunk_size")
 
     # ---- Static model capabilities ----
-    LLM_CONTEXT: ClassVar[Dict[str, Dict[str, int]]] = {
+    ClassVar[Dict[str, Dict[str, int]]] = {
         "llama3": {"ctx": 8192, "reserve": 1000},
         "mistral": {"ctx": 8192, "reserve": 1000},
+        "qwen3:8b": {"ctx": 32768, "reserve": 1000},
     }
 
     # ---- Derived properties ----
