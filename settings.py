@@ -19,14 +19,13 @@ class Settings:
     reasoner_llm: str = field(default_factory=lambda: get_env("REASONER_LLM", "mistral"))
     critic_llm: str = field(default_factory=lambda: get_env("CRITIC_LLM", "qwen3:8b"))
 
-    llm_name: str = field(default_factory=lambda: get_env("LLM", "llama3"))     # to be removed
-
     embed_model_name: str = field(
         default_factory=lambda: get_env(
             "EMBED_MODEL",
             "sentence-transformers/all-MiniLM-L6-v2"
         )
     )
+    
     vector_database_path: str = field(
         default_factory=lambda: get_env("VECTOR_DATABASE_PATH", "./vector_database")
     )
@@ -47,22 +46,42 @@ class Settings:
         "qwen3:8b": {"ctx": 32768, "reserve": 1000},
     }
 
-    # ---- Derived properties ----
+    # ---- Helper functions ----
+    def _get_context_for_model(self, model_name: str) -> Dict[str, int]:
+        """Helper to fetch context dict with a fallback to llama3."""
+        return self.LLM_CONTEXT.get(model_name, self.LLM_CONTEXT["llama3"])
+
+    def _calculate_max_context(self, model_name: str) -> int:
+        """Helper to calculate max_total - reserved."""
+        ctx_data = self._get_context_for_model(model_name)
+        return max(0, ctx_data["ctx"] - ctx_data["reserve"])
+
+    # --- Planner Properties ---
     @property
-    def llm_context(self) -> Dict[str, int]:
-        return self.LLM_CONTEXT.get(self.llm_name, self.LLM_CONTEXT["llama3"])
-    
+    def planner_context(self) -> Dict[str, int]:
+        return self._get_context_for_model(self.planner_llm)
+
     @property
-    def max_total_tokens(self) -> int:
-        return self.llm_context["ctx"]
-    
+    def planner_max_context_tokens(self) -> int:
+        return self._calculate_max_context(self.planner_llm)
+
+    # --- Reasoner Properties ---
     @property
-    def reserved_tokens(self) -> int:
-        return self.llm_context["reserve"]
-    
+    def reasoner_context(self) -> Dict[str, int]:
+        return self._get_context_for_model(self.reasoner_llm)
+
     @property
-    def max_context_tokens(self) -> int:
-        return max(0, self.max_total_tokens - self.reserved_tokens)
+    def reasoner_max_context_tokens(self) -> int:
+        return self._calculate_max_context(self.reasoner_llm)
+
+    # --- Critic Properties ---
+    @property
+    def critic_context(self) -> Dict[str, int]:
+        return self._get_context_for_model(self.critic_llm)
+
+    @property
+    def critic_max_context_tokens(self) -> int:
+        return self._calculate_max_context(self.critic_llm)
     
 
 """
