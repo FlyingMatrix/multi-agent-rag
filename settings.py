@@ -3,7 +3,6 @@ from dataclasses import dataclass, field    # @dataclass -> simplify class creat
 from typing import ClassVar, Dict
 
 
-
 def get_env(key: str, default: str) -> str:
     return os.getenv(key, default)
 
@@ -12,6 +11,7 @@ def get_env_int(key: str, default: int) -> int:
         return int(os.getenv(key, default))
     except ValueError:
         return default
+    
     
 @dataclass(frozen=True)
 class Settings:
@@ -66,10 +66,6 @@ class Settings:
     def planner_context(self) -> Dict[str, int]:
         return self._get_context_for_model(self.planner_llm)
 
-    @property
-    def planner_max_context_tokens(self) -> int:
-        return self._calculate_max_context(self.planner_llm)
-
     # --- Reasoner Properties ---
     @property
     def reasoner_context(self) -> Dict[str, int]:
@@ -83,10 +79,6 @@ class Settings:
     @property
     def critic_context(self) -> Dict[str, int]:
         return self._get_context_for_model(self.critic_llm)
-
-    @property
-    def critic_max_context_tokens(self) -> int:
-        return self._calculate_max_context(self.critic_llm)
     
 
 """
@@ -105,3 +97,4 @@ class Settings:
                  | Llama 3.1 8B      | making it great for "grading" the reasoner's output.
         
 """
+

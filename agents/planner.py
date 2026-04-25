@@ -5,7 +5,7 @@ from llm import LLM
 
 
 settings = Settings()
-LLM_NAME = settings.llm_name
+PLANNER_LLM = settings.planner_llm
 
 
 class Planner:
@@ -13,7 +13,7 @@ class Planner:
         LLM-powered Planner using local LLMs.
         Decomposes complex queries into manageable sub-queries for RAG.
     """
-    def __init__(self, model: str = LLM_NAME):
+    def __init__(self, model: str = PLANNER_LLM):
         self.model = model
         self.llm = LLM(model=self.model)        # Initialize the LLM instance
         self.system_prompt = (

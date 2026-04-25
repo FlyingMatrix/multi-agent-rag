@@ -13,10 +13,13 @@ from rich import print
 
 
 settings = Settings()
+
 ENCODING_NAME = settings.encoding_name
 
-LLM_NAME = settings.llm_name
-MAX_CONTEXT_TOKENS = settings.max_context_tokens
+REASONER_LLM = settings.reasoner_llm
+REASONER_MAX_CONTEXT_TOKENS = settings.reasoner_max_context_tokens
+
+CRITIC_LLM = settings.critic_llm
 
 
 def is_numeric_query(query: str) -> bool:
@@ -93,7 +96,8 @@ class Reasoner:
         self.retriever = Retriever()
         self.planner = Planner()
         self.skill_registry = SkillRegistry()
-        self.llm = LLM(model=LLM_NAME)
+        self.reasoner_llm = LLM(model=REASONER_LLM)
+        self.critic_llm = LLM(model=CRITIC_LLM)
         self.tokenizer = tiktoken.get_encoding(ENCODING_NAME)   # generic subword tokenization scheme working reasonably well across models
         self.max_retries = max_retries
 
@@ -133,16 +137,16 @@ class Reasoner:
         )
 
         for i, nws in enumerate(contexts):
-            if current_tokens >= MAX_CONTEXT_TOKENS:
+            if current_tokens >= REASONER_MAX_CONTEXT_TOKENS:
                 break
 
             chunk = f"[{i}]\n(type={nws.node.metadata.get('type', 'text')} | score={nws.score:.2f})\n{nws.node.get_content()}"
 
             chunk_tokens = self.count_tokens(chunk)
 
-            if current_tokens + chunk_tokens > MAX_CONTEXT_TOKENS:
+            if current_tokens + chunk_tokens > REASONER_MAX_CONTEXT_TOKENS:
                 # adaptive truncate the chunk instead of dropping a chunk entirely
-                remaining_tokens = MAX_CONTEXT_TOKENS - current_tokens
+                remaining_tokens = REASONER_MAX_CONTEXT_TOKENS - current_tokens
                 truncated_chunk = self.tokenizer.decode(
                     self.tokenizer.encode(chunk)[:remaining_tokens]
                 )
@@ -182,7 +186,7 @@ class Reasoner:
             query=query,
             answer=answer
         )
-        return self.llm.generate(prompt)
+        return self.critic_llm.generate(prompt)
 
     def run(self, query: str) -> Iterable[str]:
         """
@@ -202,7 +206,7 @@ class Reasoner:
         # ---- simple query (fast path) ----
         if plan["type"] == "simple":
             # rewrite query to improve retrieval quality 
-            rewritten = self.llm.rewrite_query(original_query)
+            rewritten = self.reasoner_llm.rewrite_query(original_query)
             all_contexts = self.retriever.retrieve(rewritten)
 
         # ---- multi query ----
@@ -212,7 +216,7 @@ class Reasoner:
             # for each sub_query, get the top_k most similar nodes wrapped with scores, retrieval optimized
             for sub_query in plan["sub_queries"]:
                 # rewrite sub_query to improve retrieval quality 
-                rewritten = self.llm.rewrite_query(sub_query)
+                rewritten = self.reasoner_llm.rewrite_query(sub_query)
                 contexts = self.retriever.retrieve(rewritten)
                 all_contexts.extend(contexts)
 
@@ -241,8 +245,8 @@ class Reasoner:
         for attempt in range(self.max_retries + 1):
             # Step 1: QA generation
             prompt, context_text = self.build_prompt(original_query, all_contexts, feedback)
-            # answer = self.llm.generate(prompt)
-            answer_stream = self.llm.stream(prompt)
+            # answer = self.reasoner_llm.generate(prompt)
+            answer_stream = self.reasoner_llm.stream(prompt)
             answer = ""
             for token in answer_stream:
                 answer += token
