@@ -5,11 +5,11 @@ from llm import LLM
 from typing import Iterable
 from dataclasses import dataclass
 from settings import Settings
+from rich import print
 
 import tiktoken             # local tokenizer
 import re
 import json
-from rich import print
 
 
 settings = Settings()
@@ -100,6 +100,9 @@ class Reasoner:
         self.critic_llm = LLM(model=CRITIC_LLM)
         self.tokenizer = tiktoken.get_encoding(ENCODING_NAME)   # generic subword tokenization scheme working reasonably well across models
         self.max_retries = max_retries
+
+        print(f"[magenta]Initialize {REASONER_LLM} as the Reasoner LLM[/magenta]")
+        print(f"[magenta]Initialize {CRITIC_LLM} as the Critic LLM[/magenta]")
 
     def count_tokens(self, text: str) -> int:
         return len(self.tokenizer.encode(text))

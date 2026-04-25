@@ -2,6 +2,7 @@ import json
 from typing import Dict
 from settings import Settings
 from llm import LLM
+from rich import print
 
 
 settings = Settings()
@@ -27,6 +28,8 @@ class Planner:
             "use 'iPhone 15 battery life').\n"
             "4. Return ONLY a JSON object. Do not include any conversational text."
         )
+
+        print(f"[magenta]Initialize {PLANNER_LLM} as the Planner LLM[/magenta]")
 
     def plan(self, query: str) -> Dict:
         # Construct the instruction for the LLM
@@ -60,7 +63,7 @@ class Planner:
             return plan_data    # return a Dict
         
         except Exception as e:
-            print(f"Error in Planner: {e}")
+            print(f"[red]Error in Planner: {e}[/red]")
             # Fallback logic if the LLM output is malformed
             return {
                 "type": "simple",
