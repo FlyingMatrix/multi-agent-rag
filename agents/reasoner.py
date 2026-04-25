@@ -13,6 +13,7 @@ from rich import print
 
 
 settings = Settings()
+ENCODING_NAME = settings.encoding_name
 
 LLM_NAME = settings.llm_name
 MAX_CONTEXT_TOKENS = settings.max_context_tokens
@@ -93,7 +94,7 @@ class Reasoner:
         self.planner = Planner()
         self.skill_registry = SkillRegistry()
         self.llm = LLM(model=LLM_NAME)
-        self.tokenizer = tiktoken.get_encoding("cl100k_base")   # generic subword tokenization scheme working reasonably well across models
+        self.tokenizer = tiktoken.get_encoding(ENCODING_NAME)   # generic subword tokenization scheme working reasonably well across models
         self.max_retries = max_retries
 
     def count_tokens(self, text: str) -> int:
@@ -279,7 +280,6 @@ class Reasoner:
 
 """
     TODO: 
-        - Write tokenization scheme ("cl100k_base") into settings.py 
         - Context compression -> before building prompt:
             Summarize long chunks
             Keep only relevant sentences

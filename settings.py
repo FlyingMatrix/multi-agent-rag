@@ -3,6 +3,7 @@ from dataclasses import dataclass, field    # @dataclass -> simplify class creat
 from typing import ClassVar, Dict
 
 
+
 def get_env(key: str, default: str) -> str:
     return os.getenv(key, default)
 
@@ -25,9 +26,13 @@ class Settings:
             "sentence-transformers/all-MiniLM-L6-v2"
         )
     )
-    
+
     vector_database_path: str = field(
         default_factory=lambda: get_env("VECTOR_DATABASE_PATH", "./vector_database")
+    )
+
+    encoding_name: str = field(
+        default_factory=lambda: get_env("ENCODING_NAME", "cl100k_base")
     )
 
     # ---- Chunking ----
