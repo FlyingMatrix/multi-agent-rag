@@ -82,19 +82,20 @@ class Settings:
     
 
 """
-    TO BE TEST: 
-        - Use suitable Ollama models for each role:
-
-        Role     | Top Pick          | Key Strength
-        ---------|-------------------|-----------------------------------------------------------------------------------------------
-        Planner  | Llama 3.1 8B      | Excellent logic-to-size ratio.
-                 | Mistral v0.3      | Llama 3.1 is specifically tuned for tool use and structured planning.
-        ---------|-------------------|-----------------------------------------------------------------------------------------------
-        Reasoner | Mistral Nemo 12B  | The Reasoner needs to handle large contexts.
-                 | Phi-3 Medium      | Mistral Nemo has a 128k context window and handles technical nuances better than 8B models.
-        ---------|-------------------|-----------------------------------------------------------------------------------------------
-        Critic   | Qwen2.5 7B        | Qwen2.5 is remarkably good at strict instruction following and coding/logic,
-                 | Llama 3.1 8B      | making it great for "grading" the reasoner's output.
-        
++----------+----------------+---------+-------------------------------------+-----------------------------------+
+| AGENT    | MODEL          | SIZE    | STRENGTHS                           | WEAKNESSES                        |
++----------+----------------+---------+-------------------------------------+-----------------------------------+
+| Planner  | Llama 3 (8B)   | 4.7 GB  | - Excellent instruction following   | - Can be verbose                  |
+|          |                |         | - Great at JSON/structured output   | - Adds unnecessary conversational |
+|          |                |         | - Strong decomposition skills       |   pre-amble                       |
++----------+----------------+---------+-------------------------------------+-----------------------------------+
+| Reasoner | Mistral (7B)   | 4.1 GB  | - Dense and efficient               | - Can be overly succinct          |
+|          |                |         | - High logical "snappiness"         | - Might lack nuance in very       |
+|          |                |         | - Excellent context management      |   complex logic                   |
++----------+----------------+---------+-------------------------------------+-----------------------------------+
+| Critic   | Qwen 3 (8B)    | 5.2 GB  | - Exceptional fact-checking         | - Formatting defaults can vary    |
+|          |                |         | - High logic performance            | - Different prompt sensitivity    |
+|          |                |         | - Diverse training data perspective |   than Llama/Mistral              |
++----------+----------------+---------+-------------------------------------+-----------------------------------+
 """
 
