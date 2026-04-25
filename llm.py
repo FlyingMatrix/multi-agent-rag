@@ -4,7 +4,7 @@ from typing import Iterator, List, Dict
 
 
 settings = Settings()
-LLM_NAME = settings.llm_name
+LLM_NAME = settings.reasoner_llm    # default llm
 
 
 class LLM:

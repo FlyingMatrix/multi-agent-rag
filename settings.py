@@ -45,7 +45,7 @@ class Settings:
             raise ValueError("chunk_overlap must be smaller than chunk_size")
 
     # ---- Static model capabilities ----
-    ClassVar[Dict[str, Dict[str, int]]] = {
+    LLM_CONTEXT: ClassVar[Dict[str, Dict[str, int]]] = {
         "llama3": {"ctx": 8192, "reserve": 1000},
         "mistral": {"ctx": 8192, "reserve": 1000},
         "qwen3:8b": {"ctx": 32768, "reserve": 1000},
