@@ -82,7 +82,7 @@ class Settings:
     
 
 """
-    TODO: 
+    TO BE TEST: 
         - Use suitable Ollama models for each role:
 
         Role     | Top Pick          | Key Strength
