@@ -13,7 +13,7 @@ app.command(name="query")(query_command)    # python main.py query "What is AI?"
 
 
 @app.callback()                             # define a root-level callback
-def main(verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose mode")):
+def main(verbose: bool = typer.Option(True, "--verbose", "-v", help="Enable verbose mode")):
     """
         For global initialization, initing logging, loading settings, warming up models ...
         @app.callback(): run before any specific command (query or ingest)
@@ -39,4 +39,8 @@ if __name__ == "__main__":
         Reasoner (grounded QA)
             ↓
         Critic (self-correction loop)
+"""
+
+"""
+    TODO: Starting UI
 """
