@@ -1,10 +1,11 @@
 from agents.router import Router
 from agents.reasoner import Reasoner
-from rich import print
+from rich.console import Console
 
 
 router = Router()
 reasoner = Reasoner()
+console = Console()     
 
 
 def handle_query(query: str):
@@ -17,14 +18,14 @@ def handle_query(query: str):
 
 
 def query_command(query: str):
-
-    print(f"[green]Query: {query}[/green]", flush=True)
+    console.print(f"[green]Query: {query}[/green]")
 
     stream = handle_query(query)
     for token in stream:
-        print(f"[cyan]{token}[/cyan]", end="", flush=True)
+        console.print(f"[cyan]{token}[/cyan]", end="")
 
-    print()
+    console.print()     # print a final newline
+
 
 """
     Flow:    
