@@ -18,11 +18,11 @@ def handle_query(query: str):
 
 def query_command(query: str):
 
-    print(f"[green]Query: {query}[/green]")
+    print(f"[green]Query: {query}[/green]", flush=True)
 
     stream = handle_query(query)
     for token in stream:
-        print(f"[cyan]{token}[/cyan]", end="")
+        print(f"[cyan]{token}[/cyan]", end="", flush=True)
 
     print()
 
