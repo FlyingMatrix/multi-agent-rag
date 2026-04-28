@@ -2,6 +2,11 @@ from agents.router import Router
 from agents.reasoner import Reasoner
 from rich.console import Console
 import sys
+import io
+
+# Force stdout to use utf-8 and 'replace' characters it doesn't recognize
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 router = Router()
 reasoner = Reasoner()
