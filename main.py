@@ -2,7 +2,7 @@ from ingest import ingest_command
 from query import query_command
 import typer                                             # a library for building CLI (Command Line Interface) apps easily
 from rich import print as rprint                         # an enhanced print function for styled/colored terminal output
-import sys
+
 
 app = typer.Typer(help="Multi-agent RAG - CLI & UI")     # "RAG Agent CLI" is the help description shown when running "python main.py --help"
 

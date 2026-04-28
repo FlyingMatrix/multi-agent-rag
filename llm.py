@@ -19,6 +19,7 @@ class LLM:
         return messages
 
     def generate(self, prompt: str, system_prompt: str = None, **kwargs) -> str:
+        print(f"[DEBUG] Calling Ollama API with model: {self.model}")
         messages = self._build_messages(prompt, system_prompt)
         response = ollama.chat(
             model=self.model, 
@@ -28,6 +29,7 @@ class LLM:
         return response.get("message", {}).get("content", "")
 
     def stream(self, prompt: str, system_prompt: str = None, **kwargs) -> Iterator[str]:
+        print(f"[DEBUG] Calling Ollama API with model: {self.model}")
         messages = self._build_messages(prompt, system_prompt)
         try:    
             response_stream = ollama.chat(
