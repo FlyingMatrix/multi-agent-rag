@@ -95,42 +95,51 @@
         const chat = document.getElementById('chat');
         const msgInput = document.getElementById('msg');
         let currentBotMsg = null;
-
-        // Allow pressing "Enter" to send
-        msgInput.addEventListener("keypress", (event) => {
-            if (event.key === "Enter") {
-                send();
-            }
-        });
+        let isCaptureStarted = false; // Flag to track if we found the answer yet
 
         function send() {
             const text = msgInput.value.trim();
             if (!text) return;
 
-            // Add user message
+            // Reset flags for the new question
+            isCaptureStarted = false; 
+
             const userDiv = document.createElement('div');
             userDiv.className = 'message user';
             userDiv.textContent = text;
             chat.appendChild(userDiv);
             
-            // Create the placeholder for the bot
             currentBotMsg = document.createElement('div');
             currentBotMsg.className = 'message bot';
+            // Hide the bubble initially so empty bubbles don't appear during logging
+            currentBotMsg.style.display = 'none'; 
             chat.appendChild(currentBotMsg);
 
             socket.emit('ask-question', text);
             msgInput.value = '';
-            
-            // Scroll to bottom
             chat.scrollTop = chat.scrollHeight;
         }
 
         socket.on('answer-chunk', (chunk) => {
             if (currentBotMsg) {
-                currentBotMsg.textContent += chunk; 
+                // Check if the current chunk contains the start of the answer
+                if (chunk.includes("Answer:")) {
+                    isCaptureStarted = true;
+                    currentBotMsg.style.display = 'block'; // Show the bubble now
+                    
+                    // Strip the "Answer:" prefix so only the content shows
+                    const cleanChunk = chunk.split("Answer:")[1];
+                    currentBotMsg.textContent += cleanChunk;
+                } 
+                // If we've already passed the "Answer:" marker, keep appending
+                else if (isCaptureStarted) {
+                    currentBotMsg.textContent += chunk;
+                }
+                
                 chat.scrollTop = chat.scrollHeight;
             }
         });
     </script>
 </body>
 </html>
+
