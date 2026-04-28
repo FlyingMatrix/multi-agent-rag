@@ -2,3 +2,4 @@ __pycache__
 files
 vector_database
 dev_note.md
+node_modules

@@ -1,7 +1,7 @@
 from agents.router import Router
 from agents.reasoner import Reasoner
 from rich.console import Console
-
+import sys
 
 router = Router()
 reasoner = Reasoner()
@@ -17,14 +17,24 @@ def handle_query(query: str):
     return ["I don't know."]
 
 
-def query_command(query: str):
-    console.print(f"[green]Query: {query}[/green]")
+def query_command(query: str, ui: bool = False):
+    if not ui:
+        console.print(f"[green]Query: {query}[/green]")
 
     stream = handle_query(query)
-    for token in stream:
-        console.print(f"[cyan]{token}[/cyan]", end="")
 
-    console.print()     # print a final newline
+    for token in stream:
+        if ui:
+            # Use sys.stdout.write for the cleanest possible stream
+            sys.stdout.write(token)
+            sys.stdout.flush()
+        else:
+            console.print(f"[cyan]{token}[/cyan]", end="")
+
+    if ui:
+        print()
+    else:
+        console.print()
 
 
 """
