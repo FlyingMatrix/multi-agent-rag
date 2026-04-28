@@ -63,6 +63,5 @@ $query
 ---
 
 ## Output Format
-Answer: <final answer>  
-
-Sources: [0][1]
+Answer: <final answer>
+Source: [0], [1]
